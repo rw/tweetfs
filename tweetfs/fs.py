@@ -4,8 +4,7 @@ from os.path import exists
 
 def fatal_if_exists(name, kind):
     if exists(name):
-       raise RuntimeError('FATAL: tried to create %s "%s", but it ' + \
-                          'already exists!' % (kind, name))
+       raise RuntimeError('FATAL: %s "%s" already exists!' % (kind, name))
 
 def create_dir(name):
     fatal_if_exists(name, 'directory')
