@@ -15,7 +15,7 @@ def create_dir(name):
 def write_file(name, data):
     """name + bits -> fd"""
     fatal_if_exists(name, 'file')
-    print 'creating "%s" (%s bytes)...' % (name, len(data) / 8),
+    print 'creating "%s" (%s bytes)...' % (name, len(data)),
     f = open(name, 'w') # simple. TODO: metadata support
     f.write(data)
     f.close()
