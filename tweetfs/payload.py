@@ -30,11 +30,13 @@ if __name__ == '__main__':
     d0 = bson.dumps({'type': 'dir',
                      'name': 'baz',
                      'children': ['abc', 'xyz']})
-    def fetch_payload(tweet_id): # dummy, for testing. yaey dynamic scope!
+    def fetch_payload(tweet_id): # dummy, for testing. hooray dynamic scope
         if tweet_id == 'abc':
             return f0
         elif tweet_id == 'xyz':
             return f1
+
     write_payload(bson.loads(d0))
 
-    print os.system('tree -psuF baz')
+    print ''
+    os.system('ls -l baz | sed 1d')
