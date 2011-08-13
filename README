@@ -1,4 +1,12 @@
+-----
+run the alpha example:
+$ sudo pip install bitstring bson # optional
+$ cd tweetfs
+$ python payload.py
+$ rm -r baz
 
+-----
+spec:
 read directory:
 1) pull payload from seqtweet: give url or ID (which gets turned into url)
 2) unpickle that payload, expect a directory
