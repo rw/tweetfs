@@ -3,6 +3,7 @@ run the alpha example:
 $ sudo pip install bitstring bson # optional
 $ cd tweetfs
 $ python payload.py
+contents of directory baz/:
 -rw-r--r--  1 rw  staff     3B Aug 13 00:34 foo
 -rw-r--r--  1 rw  staff     5B Aug 13 00:34 qu ux
 $ rm -r baz # optional

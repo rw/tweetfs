@@ -38,5 +38,5 @@ if __name__ == '__main__':
 
     write_payload(bson.loads(d0))
 
-    print ''
+    print 'contents of directory baz/:'
     os.system('ls -l baz | sed 1d')
