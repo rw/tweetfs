@@ -1,0 +1,11 @@
+
+read directory:
+1) pull payload from seqtweet: give url or ID (which gets turned into url)
+2) unpickle that payload, expect a directory
+3) switch on the object's 'type' key:
+   'file' =>
+            'bin'  => file contents
+            'name' => filename in this dir
+   'dir'  =>
+            'name' => name of dir (in cwd)
+            'files' => [id, id, ...]
