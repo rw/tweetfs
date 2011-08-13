@@ -18,6 +18,7 @@ def write_payload(payload):
         for child in x.get('children', []):
             payload = fetch_payload(child) # twitter id
             write_payload(bson.loads(payload))
+        os.chdir('..')
 
 if __name__ == '__main__':
     f0 = bson.dumps({'type': 'file',
