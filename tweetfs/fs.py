@@ -6,6 +6,24 @@ def fatal_if_exists(name, kind):
     if exists(name):
        raise RuntimeError('FATAL: %s "%s" already exists!' % (kind, name))
 
+def fatal_if_nexists(name, kind):
+    if not exists(name):
+       raise RuntimeError('FATAL: %s "%s" does not exist!' % (kind, name))
+
+def read_file(name):
+    fatal_if_nexists(name, 'file')
+    print ('reading file "%s"...' % name),
+    raw = open(name, 'rb').read()
+    print 'ok'
+    return raw
+
+#def read_dir(name):
+#    fatal_if_nexists(name, 'directory')
+#    print ('reading directory "%s"...' % name),
+#    raw = open(name, 'rb').read()
+#    print 'ok'
+#    return raw
+
 # create dir on filesystem
 def write_dir(name):
     fatal_if_exists(name, 'directory')
