@@ -6,12 +6,14 @@ def fatal_if_exists(name, kind):
     if exists(name):
        raise RuntimeError('FATAL: %s "%s" already exists!' % (kind, name))
 
-def create_dir(name):
+# create dir on filesystem
+def write_dir(name):
     fatal_if_exists(name, 'directory')
     print ('creating directory "%s"...' % name),
     mkdir(name) # uses umask and current working dir
     print 'ok'
 
+# create file on filesystem
 def write_file(name, data):
     """name + bits -> fd"""
     fatal_if_exists(name, 'file')

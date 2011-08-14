@@ -13,7 +13,7 @@ def write_payload(payload):
     if x['type'] == 'file':
         fs.write_file(x['name'], x['data']) # raw bytes
     elif x['type'] == 'dir':
-        fs.create_dir(x['name'])
+        fs.write_dir(x['name'])
         os.chdir(x['name'])
         for child in x.get('children', []):
             payload = fetch_payload(child) # twitter id
