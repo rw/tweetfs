@@ -4,7 +4,6 @@ from os.path import exists
 from os import chdir, mkdir, tmpfile
 
 from bitstring import ConstBitArray
-
 from util import is_file, is_dir
 
 
@@ -19,20 +18,29 @@ def deserialize(s):
         raise ArgumentError('FATAL: bad type "%s"' % x['type'])
     return x
 
-def unpack(x, retrieve, recur=False):
-    '''Option: recur=True will unpack all data.'''
-    if is_file(x):
-        data, name = x['data'], x['name']
+def unpack(payload, downloader, name_override=None, recur=False):
+    print str(payload)
+    if is_file(payload):
+        data, name = payload['data'], payload['name']
+        if name_override:
+            name = name_override
+        fatal_if_exists(name, 'file')
+        print 'writing "%s"' % name
         write_file(name, data)
-    elif is_dir(x):
-        name, tweet_ids = x['name'], x['ids']
+    elif is_dir(payload):
+        ids, name = payload['ids'], payload['name']
+        if name_override:
+            name = name_override
+        fatal_if_exists(name, 'directory')
+        print 'name: %s, tweet_ids: %s' % (name, ids)
         write_dir(name)
         if recur:
             chdir(name)
-            for tweet_id in tweet_ids:
-                unpack(deserialize(retrieve(tweet_id)),
-                       retrieve,
-                       recur=recur)
+            for id in ids:
+                unpack(deserialize(downloader(id)),
+                            downloader,
+                            name_override=None,
+                            recur=recur)
             chdir('..')
 
 def write_file(name, data):
@@ -40,7 +48,7 @@ def write_file(name, data):
        name + bits -> fd'''
     fatal_if_exists(name, 'file')
     print 'creating "%s" (%s bytes)...' % (name, len(data)),
-    f = open(name, 'w') # simple. TODO: metadata support
+    f = open(name, 'wb') # simple. TODO: metadata support
     f.write(data)
     f.close()
     print 'ok'
