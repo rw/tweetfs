@@ -5,27 +5,23 @@ import subprocess
 from bitstring import ConstBitArray
 from comm import *
 from pack import pack, serialize
-from unpack import unpack
+from unpack import unpack, deserialize
 
 TEST_SRC = 'unit-test-src'
-TEST_DEST1 = 'unit-test-dest1'
-TEST_DEST2 = 'unit-test-dest2'
+TEST_DIR_DEST = 'unit-test-dest1'
+TEST_FILE_DEST = 'unit-test-dest2'
 
 def are_identical_dirs(d0, d1):
-    retcode = subprocess(["diff -r", d0, d1])
-    if retcode == 0:
-        return True
-    else:
-        return False
+    return subprocess.call(['diff', '-r', d0, d1]) == 0
 
 def verify_comms(uploader, downloader):
     waldo = ConstBitArray(hex='0x0001').tobytes()
-    x = serialize({'type': 'file',
-                   'name': 'waldo',
-                   'data': waldo})
-    i = uploader(x)
-    out = downloader(i)
-    assert(out == x)
+    payload = serialize({'type': 'file',
+                         'name': 'waldo',
+                         'data': waldo})
+    upload_id = uploader(payload)
+    downloaded = downloader(upload_id)
+    assert(payload == downloaded)
 
 def fixture():
     os.mkdir(TEST_SRC)
@@ -45,33 +41,43 @@ def fixture():
 def file_equals(filename, bytestr):
     return open(filename, 'rb').read() == bytestr
 
-def verify():
-    # test1: test that a packed dir gets unpacked correctly
-    tweet_id = pack(TEST_SRC, memory_uploader)
-    return
-    unpack(tweet_id, TEST_DEST1, downloader=memory_downloader)
-    if not are_identical_dirs(TEST_SRC, TEST_DEST1):
+def verify_file():
+    # test1: test that a packed file gets unpacked correctly
+    fn = TEST_SRC + '/foo'
+    tweet_id = pack(fn, memory_uploader)
+    payload = deserialize(memory_downloader(tweet_id))
+    unpack(payload, memory_downloader, name_override=TEST_FILE_DEST , recur=True)
+    if not are_identical_dirs(fn, TEST_FILE_DEST):
         raise RuntimeError('%s is diff than %s, packing test failed' % \
-                (TEST_SRC, TEST_DEST1))
+                (fn, TEST_FILE_DEST))
     else:
         print 'TEST 1: PASSED'
 
-    return
-    # test2: transitivity is fun
-    encoded2 = pack(TEST_DEST1)
-    unpack(encoded2, TEST_DEST2, downloader=memory_downloader)
-    if not are_identical_dirs(TEST_SRC, TEST_DEST2):
+def verify_dir():
+    # test2: test that a packed dir gets unpacked correctly
+    tweet_id = pack(TEST_SRC, memory_uploader)
+    root_payload = deserialize(memory_downloader(tweet_id))
+    unpack(root_payload, memory_downloader, name_override=TEST_DIR_DEST, recur=True)
+    if not are_identical_dirs(TEST_SRC, TEST_DIR_DEST):
         raise RuntimeError('%s is diff than %s, packing test failed' % \
-                (TEST_SRC, TEST_DEST2))
+                (TEST_SRC, TEST_DIR_DEST))
     else:
         print 'TEST 2: PASSED'
 
-    # cleanup
-    for dname in [TEST_SRC, TEST_DEST1, TEST_DEST2]:
+def cleanup():
+    # cleanup fixtures
+    for dname in [TEST_SRC, TEST_DIR_DEST]:
         print 'deleting test dir %s... ' % dname,
-        shutil.mtree(dname)
+        shutil.rmtree(dname)
         print 'ok'
+    for fname in [TEST_FILE_DEST]:
+        print 'deleting test file %s... ' % fname,
+        os.remove(fname)
+        print 'ok'
+
 
 verify_comms(memory_uploader, memory_downloader)
 fixture()
-verify()
+verify_file()
+verify_dir()
+cleanup()
