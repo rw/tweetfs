@@ -1,5 +1,7 @@
 # pack a file or directory into a dict
-from os.path import exists
+import bson
+from os.path import exists, split
+import os
 
 def fatal_if_nexists(name, kind):
     '''Fail if a file does not exist.'''
@@ -19,22 +21,31 @@ def read_file(name):
     print 'ok'
     return raw
 
-def pack_walk(root):
-    for basedir, unused, files in os.walk(root, topdown=False):
-        print 'entering: %s' % basedir
-        tweet_ids = []
-        for i, f in enumerate(files):
-            fullpath = os.path.join(basedir, f)
-            print 'yielding file named: "%s" ...' % fullpath,
-            f_packed = serialize({'type': 'file',
-                                  'name': f,
-                                  'data': read_file(f)})
-            print f
-            yield f
-        print ('uploading dir listing: "%s" ...' % basedir),
-        d_packed = serialize({'type': 'dir',
-                              'name': basedir,
-                              'ids': []})
+def dirs(dir):
+    return [name for name in os.listdir(dir)
+            if os.path.isdir(os.path.join(dir, name))]
 
-#       pack_walk(basedir)
-        print 'ok'
+def files(dir):
+    return [name for name in os.listdir(dir)
+            if os.path.isfile(os.path.join(dir, name))]
+
+def pack(node, uploader):
+    if os.path.isfile(node):
+        print 'file: %s' % node
+        payload = serialize({'type': 'file',
+                             'name': node,
+                             'data': read_file(node)})
+        external_id = uploader(payload)
+        return external_id
+    else:
+        print 'dir: %s: %s' % (node, os.listdir(node))
+        os.chdir(node)
+        external_ids = []
+        for child in os.listdir('.'):
+            external_ids.append(pack(child, uploader))
+        os.chdir('..')
+        payload = serialize({'type': 'dir',
+                             'name': node,
+                             'ids': external_ids})
+        external_id = uploader(payload)
+        return external_id
