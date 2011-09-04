@@ -4,7 +4,7 @@ from os.path import exists
 from os import chdir, mkdir, tmpfile
 
 from bitstring import ConstBitArray
-from util import is_file, is_dir
+from util import is_file, is_dir, assert_type
 
 
 def fatal_if_exists(name, kind):
@@ -18,8 +18,10 @@ def deserialize(s):
         raise ArgumentError('FATAL: bad type "%s"' % x['type'])
     return x
 
-def unpack(payload, downloader, name_override=None, recur=False):
+def unpack(payload, downloader, concealer, name_override=None, recur=False):
     print str(payload)
+    assert_type(payload, dict, 'unpack')
+
     if is_file(payload):
         data, name = payload['data'], payload['name']
         if name_override:
@@ -37,10 +39,10 @@ def unpack(payload, downloader, name_override=None, recur=False):
         if recur:
             chdir(name)
             for id in ids:
-                unpack(deserialize(downloader(id)),
-                            downloader,
-                            name_override=None,
-                            recur=recur)
+                unpack(concealer.reveal(deserialize(downloader(id)),
+                                                    downloader,
+                                                    name_override=None,
+                                                    recur=recur))
             chdir('..')
 
 def write_file(name, data):
