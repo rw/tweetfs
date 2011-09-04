@@ -1,7 +1,7 @@
 from bitstring import ConstBitArray
 import bson, os
 
-import fs
+import pack, unpack
 
 def write_payload(payload):
     x = payload
@@ -11,9 +11,9 @@ def write_payload(payload):
             raise RuntimeError('FATAL: bad BSON block: %s not in %s' %
                                (k, x.keys()))
     if x['type'] == 'file':
-        fs.write_file(x['name'], x['data']) # raw bytes
+        pack.write_file(x['name'], x['data']) # raw bytes
     elif x['type'] == 'dir':
-        fs.write_dir(x['name'])
+        pack.write_dir(x['name'])
         os.chdir(x['name'])
         for child in x.get('children', []):
             payload = fetch_payload(child) # twitter id
@@ -22,7 +22,7 @@ def write_payload(payload):
 
 def file_payload(name):
     # files only this version
-    raw = fs.read_file(name)
+    raw = pack.read_file(name)
     d = bson.dumps({'type': 'file',
                     'name': name,
                     'data': raw})
