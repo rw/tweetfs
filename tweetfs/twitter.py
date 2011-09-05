@@ -12,4 +12,7 @@ def make_uploader(client):
     return lambda s: client.create(s)
 
 def make_downloader(client):
-    return lambda tweet_id: client.read(tweet_id)
+    return lambda tweet_id: str(client.read(tweet_id))
+
+def make_deleter(client):
+    return lambda tweet_id: client.delete(tweet_id)
