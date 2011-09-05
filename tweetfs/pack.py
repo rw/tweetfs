@@ -10,8 +10,8 @@ def fatal_if_nexists(name, kind):
        raise RuntimeError('FATAL: %s "%s" does not exist' % (kind, name))
 
 def serialize(x):
-    s = unicode(bson.dumps(x))
-    if not type(s) is unicode:
+    s = bson.dumps(x)
+    if not type(s) is str:
         raise ArgumentError('FATAL: bad string "%s"' % s)
     return s
 
@@ -32,23 +32,23 @@ def files(dir):
 
 def pack(node, uploader, concealer):
     if os.path.isfile(node):
-        print 'file: %s' % node
         serialized_payload = BitArray(bytes=serialize({'type': 'file',
                                                        'name': node,
                                                        'data': read_file(node)}))
         hidden_payload = concealer.conceal(serialized_payload)
         external_id = uploader(hidden_payload)
+        print 'filename: %s, tweet_id: %s' % (node, external_id)
         return external_id
     else:
-        print 'dir: %s: %s' % (node, os.listdir(node))
         os.chdir(node)
         external_ids = []
         for child in os.listdir('.'):
-            external_ids.append(pack(child, uploader))
+            external_ids.append(pack(child, uploader, concealer))
         os.chdir('..')
         serialized_payload = BitArray(bytes=serialize({'type': 'dir',
                                                        'name': node,
                                                        'ids': external_ids}))
         hidden_payload = concealer.conceal(serialized_payload)
         external_id = uploader(hidden_payload)
+        print 'dirname: %s: %s' % (node, external_id)
         return external_id

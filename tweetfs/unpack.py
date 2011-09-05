@@ -1,9 +1,9 @@
 # unpack a dict into a dir or file
+from bitstring import BitArray
 import bson
 from os.path import exists
 from os import chdir, mkdir, tmpfile
 
-from bitstring import ConstBitArray
 from util import is_file, is_dir, assert_type
 
 
@@ -12,14 +12,19 @@ def fatal_if_exists(name, kind):
     if exists(name):
        raise RuntimeError('FATAL: %s "%s" already exists' % (kind, name))
 
-def deserialize(s):
+def deserialize(bits):
+    assert_type(bits, BitArray, 'deserialize')
+    s = bits.tobytes()
+    assert_type(s, str, 'deserialize')
+    print 's: %s %s' % (len(s), s)
     x = bson.loads(s)
+    print 'bson loads len: %s' % len(x)
+    print x
     if not is_file(x) and not is_dir(x):
         raise ArgumentError('FATAL: bad type "%s"' % x['type'])
     return x
 
-def unpack(payload, downloader, concealer, name_override=None, recur=False):
-    print str(payload)
+def unpack(payload, tweet_id, downloader, concealer, name_override=None, recur=False):
     assert_type(payload, dict, 'unpack')
 
     if is_file(payload):
@@ -27,22 +32,27 @@ def unpack(payload, downloader, concealer, name_override=None, recur=False):
         if name_override:
             name = name_override
         fatal_if_exists(name, 'file')
-        print 'writing "%s"' % name
+        print 'filename: %s, tweet_id: %s' % (name, tweet_id)
         write_file(name, data)
     elif is_dir(payload):
         ids, name = payload['ids'], payload['name']
         if name_override:
             name = name_override
         fatal_if_exists(name, 'directory')
-        print 'name: %s, tweet_ids: %s' % (name, ids)
+        print 'dirname: %s, tweet_ids: %s' % (name, ids)
         write_dir(name)
         if recur:
             chdir(name)
-            for id in ids:
-                unpack(concealer.reveal(deserialize(downloader(id)),
-                                                    downloader,
-                                                    name_override=None,
-                                                    recur=recur))
+            for tweet_id in ids:
+                payload = downloader(tweet_id)
+                payload = concealer.reveal(payload)
+                payload = deserialize(payload)
+                unpack(payload,
+                       tweet_id,
+                       downloader,
+                       concealer,
+                       name_override=None,
+                       recur=recur)
             chdir('..')
 
 def write_file(name, data):
