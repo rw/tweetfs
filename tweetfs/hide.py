@@ -34,7 +34,7 @@ class Concealer(object):
         return ciphertext
 
     def reveal(self, ciphertext, do_test=True):
-        assert_type(ciphertext, unicode, 'reveal input')
+        assert_type(ciphertext, str, 'reveal input')
         cleartext = PS.model.cipher(self.model,
                                     self.context,
                                     ciphertext.split(),
