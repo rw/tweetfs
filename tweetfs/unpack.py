@@ -16,10 +16,9 @@ def deserialize(bits):
     assert_type(bits, BitArray, 'deserialize')
     s = bits.tobytes()
     assert_type(s, str, 'deserialize')
-    print 's: %s %s' % (len(s), s)
+    print 'serialized payload from twitter: %s bytes -> %s bytes' % \
+           (len(bits) / 8.0, len(s))
     x = bson.loads(s)
-    print 'bson loads len: %s' % len(x)
-    print x
     if not is_file(x) and not is_dir(x):
         raise ArgumentError('FATAL: bad type "%s"' % x['type'])
     return x
@@ -32,14 +31,14 @@ def unpack(payload, tweet_id, downloader, concealer, name_override=None, recur=F
         if name_override:
             name = name_override
         fatal_if_exists(name, 'file')
-        print 'filename: %s, tweet_id: %s' % (name, tweet_id)
+        print 'unpacked "%s" from tweet_id %s' % (name, tweet_id)
         write_file(name, data)
     elif is_dir(payload):
         ids, name = payload['ids'], payload['name']
         if name_override:
             name = name_override
         fatal_if_exists(name, 'directory')
-        print 'dirname: %s, tweet_ids: %s' % (name, ids)
+        print 'unpacked "%s" with child tweet_ids %s' % (name, ids)
         write_dir(name)
         if recur:
             chdir(name)
