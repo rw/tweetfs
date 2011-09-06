@@ -32,9 +32,11 @@ def files(dir):
             if os.path.isfile(os.path.join(dir, name))]
 
 def pack(node, uploader, concealer):
+    perms = os.stat(node).st_mode
     if os.path.isfile(node):
         serialized_payload = BitArray(bytes=serialize({'type': 'file',
                                                        'name': node,
+                                                       'perms': perms,
                                                        'data': read_file(node)}))
         hidden_payload = concealer.conceal(serialized_payload)
         external_id = uploader(hidden_payload)
@@ -48,6 +50,7 @@ def pack(node, uploader, concealer):
         os.chdir('..')
         serialized_payload = BitArray(bytes=serialize({'type': 'dir',
                                                        'name': node,
+                                                       'perms': perms,
                                                        'ids': external_ids}))
         hidden_payload = concealer.conceal(serialized_payload)
         external_id = uploader(hidden_payload)
