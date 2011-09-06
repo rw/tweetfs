@@ -1,8 +1,13 @@
+import os
+import ConfigParser
 from seqtweet.seqtweet import SeqTweet
 
 def read_creds():
-    from creds import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET
-    return [CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET]
+    config = ConfigParser.ConfigParser()
+    config.read([os.path.expanduser('~/.tweetfs/creds.cfg')])
+
+    return map(lambda key: config.get('Twitter', key),
+               ['CONSUMER_KEY', 'CONSUMER_SECRET', 'ACCESS_KEY', 'ACCESS_SECRET'])
 
 def make_client():
     client = SeqTweet(*read_creds())
