@@ -6,6 +6,7 @@ from bitstring import ConstBitArray
 from comm import *
 from pack import pack, serialize
 from unpack import unpack, deserialize
+from hide import Concealer
 
 TEST_SRC = 'unit-test-src'
 TEST_DIR_DEST = 'unit-test-dest1'
@@ -14,13 +15,15 @@ TEST_FILE_DEST = 'unit-test-dest2'
 def are_identical_dirs(d0, d1):
     return subprocess.call(['diff', '-r', d0, d1]) == 0
 
-def verify_comms(uploader, downloader):
+def verify_comms(uploader, downloader, concealer):
     waldo = ConstBitArray(hex='0x0001').tobytes()
     payload = serialize({'type': 'file',
                          'name': 'waldo',
                          'data': waldo})
+    payload = concealer.conceal(payload)
     upload_id = uploader(payload)
     downloaded = downloader(upload_id)
+    downloaded = concealer.reveal(downloaded)
     assert(payload == downloaded)
 
 def fixture():
@@ -76,7 +79,9 @@ def cleanup():
         print 'ok'
 
 
-verify_comms(memory_uploader, memory_downloader)
+c = Concealer()
+c.model_load()
+verify_comms(memory_uploader, memory_downloader, c)
 fixture()
 verify_file()
 verify_dir()
