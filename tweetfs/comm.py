@@ -4,7 +4,6 @@ def memory_uploader(bson_blob):
     global MemoryKV
     MemoryCtr += 1
     MemoryKV[MemoryCtr] = bson_blob
-    print '%s = %s' % (MemoryCtr, MemoryKV[MemoryCtr])
     return MemoryCtr
 
 def memory_downloader(tweet_id):

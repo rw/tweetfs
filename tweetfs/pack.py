@@ -11,7 +11,7 @@ def fatal_if_nexists(name, kind):
 
 def serialize(x):
     s = bson.dumps(x)
-    print 'serialized payload for twitter: %s bytes -> %s bytes' % (len(x), len(s))
+    print 'serialized payload for twitter: %s bytes' % len(s)
     if not type(s) is str:
         raise ArgumentError('FATAL: bad string "%s"' % s)
     return s
@@ -41,6 +41,7 @@ def pack(node, uploader, concealer):
         hidden_payload = concealer.conceal(serialized_payload)
         external_id = uploader(hidden_payload)
         print 'packed "%s" and uploaded as tweet_id %s' % (node, external_id)
+        print ''
         return external_id
     else:
         os.chdir(node)
@@ -55,4 +56,5 @@ def pack(node, uploader, concealer):
         hidden_payload = concealer.conceal(serialized_payload)
         external_id = uploader(hidden_payload)
         print 'packed "%s" and uploaded as tweet_id %s' % (node, external_id)
+        print ''
         return external_id

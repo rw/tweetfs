@@ -5,7 +5,6 @@ import pack, unpack
 
 def write_payload(payload):
     x = payload
-    print x
     for k in ['type', 'name']:
         if k not in x:
             raise RuntimeError('FATAL: bad BSON block: %s not in %s' %
