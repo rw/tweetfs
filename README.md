@@ -46,6 +46,7 @@ Usage
         tweetfs upload <file or directory>
 
    It'll print a list of tweet ids that were created when storing the files.
+
 5. Any file can be retrieved by referencing its tweet id:
 
         tweetfs download <tweet id> <optional filename to write to>
