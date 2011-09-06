@@ -1,24 +1,39 @@
 import plainsight as PS
 from bitstring import BitArray
+import os, sys
+from glob import glob
+import marshal as pickle
 
 from util import assert_type
 
 class Concealer(object):
     def __init__(self):
-        self.context = 3
-        self.model_input = open('data/model-text.txt', 'rb')
+        self.context = 2
+        self.model = self.create_model()
 
-        self.model = PS.model.Model(self.context)
-        self.model_load()
+#       TODO: caching
+#       self.model_filename = os.path.expanduser('~/.tweetfs/lang-model.pickle')
+#       if not os.path.exists(self.model_filename):
+#           self.create_model()
+#       self.load_cached_model()
 
-    def model_load(self):
-        model_text = PS.data.take_char_input(self.model_input)
-        #start = time()
-        self.model.add_text(model_text, self.context)
-        #sys.stderr.write('Model: %s added in %.02fs (context == %d)\n' \
-        #                 % (123,#self.model_filename.name,
-        #                    time() - start,
-        #                    self.context))
+    def load_cached_model(self):
+        print 'loading cached language model from %s...' % self.model_filename,
+        self.model = pickle.load(open(self.model_filename, 'rb'))
+        print 'done'
+
+    def create_model(self):
+        print 'creating language model: ',
+        sys.stdout.flush()
+        model = PS.model.Model(self.context, progress=False)
+        filenames = glob(os.path.expanduser('~/.tweetfs/texts/*.txt'))
+        text = ' '.join(map(lambda fn: open(fn, 'r').read(), filenames))
+        print 'input is %s bytes, loading into model... ' % len(text),
+        sys.stdout.flush()
+
+        model.add_text(text, self.context)
+        print 'done'
+        return model
 
     def conceal(self, cleartext, do_test=True):
         assert_type(cleartext, BitArray, 'conceal input')
@@ -28,9 +43,15 @@ class Concealer(object):
                                      'encipher')
         assert_type(ciphertext, str, 'conceal output')
         if do_test:
+            sink = open('/dev/null', 'w')
+            out, err  = sys.stdout, sys.stderr
+            sys.stdout, sys.stderr = sink, sink
             test = self.reveal(ciphertext, do_test=False)
+            sys.stdout, sys.stderr = out, err
+            sink.close()
             if test != cleartext:
                 raise RuntimeError('conceal+reveal did not produce expected output')
+        print 'concealed cleartext, output is %s bytes' % len(ciphertext)
         return ciphertext
 
     def reveal(self, ciphertext, do_test=True):
@@ -41,7 +62,13 @@ class Concealer(object):
                                     'decipher')
         assert_type(cleartext, BitArray, 'reveal output')
         if do_test:
+            sink = open('/dev/null', 'w')
+            out, err  = sys.stdout, sys.stderr
+            sys.stdout, sys.stderr = sink, sink
             test = self.conceal(cleartext, do_test=False)
+            sys.stdout, sys.stderr = out, err
+            sink.close()
             if test != ciphertext:
                 raise RuntimeError('reveal+conceal did not produce expected output')
+        print 'revealed ciphertext, output is %s bytes' % len(cleartext)
         return cleartext
